@@ -1,0 +1,33 @@
+{
+  "name": "KOpager",
+  "authors": [
+    "Bobby Cafazzo <bcafazzo@nbi.company>"
+  ],
+  "description": "Knockout-based paginated table component.",
+  "main": "src/ko-pager.js",
+  "moduleType": [],
+  "keywords": [
+    "knockout",
+    "pager",
+    "paginated",
+    "paging",
+    "pagination",
+    "page",
+    "table",
+    "tables"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/NowBI/ko-pager",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "knockout": "~3.4.0",
+    "bootstrap": "~3.3.6"
+  }
+}
