@@ -46,7 +46,9 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
 	pageTemplate: 'ko-pager-default-page-template',
 	sizeTemplate: 'ko-pager-default-size-template',
 	buttonTemplate: 'ko-pager-default-button-template',
+	nextIcon: 'glyphicon glyphicon-chevron-right',
 	nextTemplate: 'ko-pager-default-next-template',
+	prevIcon: 'glyphicon glyphicon-chevron-left',
 	prevTemplate: 'ko-pager-default-prev-template'
 };
 koPager.fieldDefaults = koPager.fieldDefaults || {
@@ -199,8 +201,8 @@ $("body").append(
     '<script type="text/html" id="ko-pager-default-button-template">' +
 	'<div class="row">' +
 	'<div class="pull-right btn-group">' +
-	'<span data-bind="template: options.prevTemplate"></span>' +
-	'<span data-bind="template: options.nextTemplate"></span>' +
+	'<button data-bind="template: options.prevTemplate, enable: canPrev, click: prev, attr: { class: options.prevClass }"></button>' +
+	'<button data-bind="template: options.nextTemplate, enable: canNext, click: next, attr: { class: options.nextClass }"></button>' +
 	'</div>' +
 	'</div>'
 );
@@ -213,11 +215,13 @@ $("body").append(
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-next-template">' +
-	'<a data-bind="enable: canNext, click: next, attr: { class: options.nextClass }">Next</a>' +
+	'Next' +
+	'<span data-bind="attr: { class: options.nextIcon }"></span>' +
     '</script>'
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-prev-template">' +
-	'<a data-bind="enable: canPrev, click: prev, attr: { class: options.prevClass }">Previous</a>' +
+	'<span data-bind="attr: { class: options.prevIcon }"></span>' +
+	'Previous' +
     '</script>'
 );
