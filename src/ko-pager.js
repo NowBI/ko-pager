@@ -27,7 +27,6 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
 		if(offset || pageSize){
 			data = data.splice(offset,pageSize);
 		}
-		console.log(criteria);
 		return data;
 	},
     transform: function (data) {
@@ -36,6 +35,8 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
     endpoint: null,
     method: null,
     filters: {},
+	defaultSort: null,
+	defaultSortDown: false,
     sortUpIcon: "glyphicon glyphicon-chevron-up",
     sortDownIcon: "glyphicon glyphicon-chevron-down",
     sortNoneIcon: "glyphicon glyphicon-minus",
@@ -82,8 +83,8 @@ ko.components.register('ko-pager', {
 		});
 		self.dataSize = ko.observable(self.data().length);
 		
-		self.sort = ko.observable(self.options.fields[0].field);
-		self.sortDown = ko.observable(false);
+		self.sort = ko.observable(self.options.defaultSort || self.options.fields[0].field);
+		self.sortDown = ko.observable(self.options.defaultSortDown);
 		self.setSort = function(field){
 			if(field.sortable){
 				if(self.sort() === field.field){
