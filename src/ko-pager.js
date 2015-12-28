@@ -9,8 +9,18 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
 	debug: false,
     selection: false,
     increments: [10, 25, 50, 100],
-    init: null,
-    refresh: null,
+    refresh: function(data, criteria){
+		var sortField = criteria.sort;
+		var sortDown = criteria.sortDown;
+		data = data.sort(function(a,b){
+			var value = a[sortField] > b[sortField] ? 1 : a[sortField] < b[sortField] ? -1 : 0;
+			if(sortDown){
+				value *= -1;
+			}
+			return value;
+		});
+		return data;
+	},
     transform: function (data) {
         return data;
     },
@@ -36,8 +46,10 @@ ko.components.register('ko-pager', {
     viewModel: function (params) {
         var self = this;
         self.options = $.extend({}, koPager.pagerDefaults, params);
-        console.log(self.options);
         self.data = ko.observableArray(ko.utils.unwrapObservable(self.options.data || []));
+		self.shownData = ko.pureComputed(function(){
+			return self.data.map(self.options.transform);
+		});
         self.options.fields = (self.options.fields || []).map(function (item) {
             return $.extend({}, koPager.fieldDefaults, item);
         });
@@ -53,6 +65,22 @@ ko.components.register('ko-pager', {
 				}
 			}
 		};
+		self.pageSize = ko.observable(self.options.increments[0]);
+		self.offset = ko.observable(0);
+		
+		self.searchCriteria = ko.computed(function(){
+			var options = {};
+			options.sort = ko.utils.unwrapObservable(self.sort);
+			options.sortDown = ko.utils.unwrapObservable(self.sortDown);
+			options.pageSize = ko.utils.unwrapObservable(self.pageSize);
+			options.offset = ko.utils.unwrapObservable(self.offset);
+			return options;
+		});
+		if(self.options.refresh){
+			self.searchCriteria.subscribe(function(newValue){
+				self.options.refresh(self.data, newValue);
+			});
+		}
     },
     template: '<span data-bind="if: options.debug">' +
 		'Sort: <span data-bind="text: sort"></span>' +
