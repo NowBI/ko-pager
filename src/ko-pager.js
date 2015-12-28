@@ -141,13 +141,14 @@ ko.components.register('ko-pager', {
 			});
 			self.searchCriteria.notifySubscribers();
 		}
+		if(self.options.debug){
+			self.debugInfo = ko.pureComputed(function(){
+				return JSON.stringify(self.searchCriteria(),null,"\t");
+			});
+		}
     },
     template: '<span data-bind="if: options.debug">' +
-		'Sort: <span data-bind="text: sort"></span>' +
-		' - Down: <span data-bind="text: sortDown"></span>' +
-		' - Offset: <span data-bind="text: offset"></span>' +
-		' - Page Size: <span data-bind="text: pageSize"></span>' +
-		'</span>' +
+		'<label>Debug Info:</label> <textarea data-bind="textInput: debugInfo" readonly class="form-control"></textarea>' +
 		'<div data-bind="template: options.sizeTemplate"></div>' +
 		'<div class="row">' +
 		'<div data-bind="template: options.pageTemplate"></div>' +
@@ -208,7 +209,7 @@ $("body").append(
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-size-template">' +
-	'<div class="row"><div class="pull-right">' +
+	'<div class="row"><div class="pull-right form-inline">' +
 	'<label>Results per Page:</label> <select data-bind="options: options.increments, value: pageSize, attr: { class: options.pageSizeClass }" ></select>' +
 	'</div></div>' +
     '</script>'
