@@ -12,13 +12,20 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
     refresh: function(data, criteria){
 		var sortField = criteria.sort;
 		var sortDown = criteria.sortDown;
-		data = data.sort(function(a,b){
-			var value = a[sortField] > b[sortField] ? 1 : a[sortField] < b[sortField] ? -1 : 0;
-			if(sortDown){
-				value *= -1;
-			}
-			return value;
-		});
+		if(sortField){
+			data = data.sort(function(a,b){
+				var value = a[sortField] > b[sortField] ? 1 : a[sortField] < b[sortField] ? -1 : 0;
+				if(sortDown){
+					value *= -1;
+				}
+				return value;
+			});
+		}
+		var pageSize = criteria.pageSize || 0;
+		var offset = criteria.offset || 0;
+		if(offset){
+			data.splice(offset,pageSize);
+		}
 		return data;
 	},
     transform: function (data) {
@@ -77,9 +84,10 @@ ko.components.register('ko-pager', {
 			return options;
 		});
 		if(self.options.refresh){
-			self.searchCriteria.subscribe(function(newValue){
-				self.options.refresh(self.data, newValue);
+			self.searchCriteria.subscribe(function(oldValue){
+				self.options.refresh(self.data, self.searchCriteria());
 			});
+			self.searchCriteria.notifySubscribers();
 		}
     },
     template: '<span data-bind="if: options.debug">' +
