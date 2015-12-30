@@ -33,7 +33,8 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
         return data;
     },
     endpoint: null,
-    method: null,
+    method: "GET",
+	dataType: "JSON",
     filters: {},
 	defaultSort: null,
 	defaultSortDown: false,
@@ -135,10 +136,33 @@ ko.components.register('ko-pager', {
 			options.offset = ko.utils.unwrapObservable(self.offset);
 			return options;
 		});
+		self.processData = function(data, criteria){
+			data = self.options.refresh(data, criteria);
+			self.shownData(data);
+		};
 		if(self.options.refresh){
 			self.searchCriteria.subscribe(function(oldValue){
-				var data = self.options.refresh(self.data(), self.searchCriteria());
-				self.shownData(data);
+				var criteria = self.searchCriteria();
+				if(self.options.endpoint){
+					$.ajax({
+						url: self.options.endpoint,
+						method: self.options.method,
+						data: criteria,
+						dataType: self.options.dataType
+					}).done(function(data){
+						console.log(data);
+						data = self.options.refresh(data, criteria);
+						self.shownData(data);
+					}).fail(function(data, dota, deta){
+						console.error(data);
+						console.error(dota);
+						console.error(deta);
+						data = self.options.refresh(data, criteria);
+						self.shownData(data);
+					});
+				}else{
+					self.processData(self.data(), criteria);
+				}
 			});
 			self.searchCriteria.notifySubscribers();
 		}
