@@ -14,7 +14,13 @@
             <div class="page-header">
                 <h1>Endpoint Example</h1>
             </div>
-			<ko-pager params="debug: true, endpoint: 'http://mockbin.org/bin/e7203316-7fb4-408f-a68a-700de7a3614f?foo=bar&foo=baz', fields: sampleFields, defaultSort: 'lastName'"></ko-pager>
+			<ko-pager params="debug: true, endpoint: 'http://jsonplaceholder.typicode.com/users', fields: sampleFields, defaultSort: 'lastName'"></ko-pager>
 		</div>
 	</body>
+	<script type="text/html" id="email-content-template">
+		<a data-bind="attr: { href: 'mailto:' + data[field.field] }, text: data[field.field]"></a>
+	</script>
+	<script type="text/html" id="website-content-template">
+		<a data-bind="attr: { href: data[field.field] }, text: data[field.field]"></a>
+	</script>
 </html>

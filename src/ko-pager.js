@@ -35,6 +35,7 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
     endpoint: null,
     method: "GET",
 	dataType: "JSON",
+	requery: false,
     filters: {},
 	defaultSort: null,
 	defaultSortDown: false,
@@ -82,7 +83,9 @@ ko.components.register('ko-pager', {
 				self.processedData(value);
 			}
 		});
-		self.dataSize = ko.observable(self.data().length);
+		self.dataSize = ko.pureComputed(function(){
+			return self.data().length;
+		});
 		
 		self.sort = ko.observable(self.options.defaultSort || self.options.fields[0].field);
 		self.sortDown = ko.observable(self.options.defaultSortDown);
@@ -143,22 +146,21 @@ ko.components.register('ko-pager', {
 		if(self.options.refresh){
 			self.searchCriteria.subscribe(function(oldValue){
 				var criteria = self.searchCriteria();
-				if(self.options.endpoint){
+				if(self.options.endpoint && (self.options.requery || !self.firstQueryDone)){
 					$.ajax({
 						url: self.options.endpoint,
 						method: self.options.method,
 						data: criteria,
 						dataType: self.options.dataType
 					}).done(function(data){
-						console.log(data);
-						data = self.options.refresh(data, criteria);
-						self.shownData(data);
-					}).fail(function(data, dota, deta){
-						console.error(data);
-						console.error(dota);
-						console.error(deta);
-						data = self.options.refresh(data, criteria);
-						self.shownData(data);
+						if(!self.firstQueryDone){
+							self.data(data);
+						}
+						self.processData(data, criteria);
+						self.firstQueryDone = true;
+					}).fail(function(data, dota, type){
+						console.error("Error: " + data.status + " - " + data.statusText);
+						data = self.options.refresh([], criteria);
 					});
 				}else{
 					self.processData(self.data(), criteria);
