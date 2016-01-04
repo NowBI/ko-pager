@@ -20,7 +20,7 @@
 					<input type="number" data-bind="value: sampleFilters.id" class="form-control"></input>
 				</div>
 			</div>
-			<ko-pager params="debug: true, endpoint: 'http://jsonplaceholder.typicode.com/users', filters: sampleFilters, filtersInline: true, requery: true, fields: sampleFields"></ko-pager>
+			<ko-pager params="debug: true, endpoint: { url: 'http://jsonplaceholder.typicode.com/users', filtersInline: true, requery: true}, filters: sampleFilters, fields: sampleFields"></ko-pager>
 		</div>
 	</body>
 	<script type="text/html" id="email-content-template">

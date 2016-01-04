@@ -32,27 +32,44 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
     transform: function (data) {
         return data;
     },
-    endpoint: null,
-    method: "GET",
-	dataType: "JSON",
-	requery: false,
     filters: {},
 	defaultSort: null,
-	defaultSortDown: false,
-    sortUpIcon: "glyphicon glyphicon-chevron-up",
-    sortDownIcon: "glyphicon glyphicon-chevron-down",
-    sortNoneIcon: "glyphicon glyphicon-minus",
-	pageSizeClass: "form-control",
-    class: 'table table-striped',
-	nextClass: 'btn btn-default',
-	prevClass: 'btn btn-default',
+	defaultSortDown: false
+};
+koPager.fieldDefaults = koPager.fieldDefaults || {
+    field: null,
+    title: null,
+    sortable: true,
+    headerTemplate: 'ko-pager-default-header-template',
+    headerClass: null,
+    contentTemplate: 'ko-pager-default-content-template',
+    contentClass: null
+};
+koPager.templateDefaults = koPager.templateDefaults || {
 	pageTemplate: 'ko-pager-default-page-template',
 	sizeTemplate: 'ko-pager-default-size-template',
 	buttonTemplate: 'ko-pager-default-button-template',
-	nextIcon: 'glyphicon glyphicon-chevron-right',
 	nextTemplate: 'ko-pager-default-next-template',
+	prevTemplate: 'ko-pager-default-prev-template'
+};
+koPager.classDefaults = koPager.classDefaults || {
+	pageSizeClass: "form-control",
+    tableClass: 'table table-striped',
+	nextClass: 'btn btn-default',
+	prevClass: 'btn btn-default'
+};
+koPager.iconDefaults = koPager.iconDefaults || {
+	nextIcon: 'glyphicon glyphicon-chevron-right',
 	prevIcon: 'glyphicon glyphicon-chevron-left',
-	prevTemplate: 'ko-pager-default-prev-template',
+    sortUpIcon: "glyphicon glyphicon-chevron-up",
+    sortDownIcon: "glyphicon glyphicon-chevron-down",
+    sortNoneIcon: "glyphicon glyphicon-minus"
+};
+koPager.endpointDefaults = koPager.endpointDefaults || {
+	url: null,
+    method: "GET",
+	dataType: "JSON",
+	requery: false,
 	sortParameter: 'sort',
 	sortIncluded: true,
 	sortDownParameter: 'sortDown',
@@ -65,15 +82,6 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
 	filtersIncluded: true,
 	filtersInline: false
 };
-koPager.fieldDefaults = koPager.fieldDefaults || {
-    field: null,
-    title: null,
-    sortable: true,
-    headerTemplate: 'ko-pager-default-header-template',
-    headerClass: null,
-    contentTemplate: 'ko-pager-default-content-template',
-    contentClass: null
-};
 
 ko.components.register('ko-pager', {
     viewModel: function (params) {
@@ -83,6 +91,10 @@ ko.components.register('ko-pager', {
         self.options.fields = (self.options.fields || []).map(function (item) {
             return $.extend({}, koPager.fieldDefaults, item);
         });
+		self.options.endpoint = $.extend({},koPager.endpointDefaults, self.options.endpoint);
+		self.options.icons = $.extend({},koPager.iconDefaults, self.options.icons);
+		self.options.classes = $.extend({},koPager.classDefaults, self.options.classes);
+		self.options.templates = $.extend({},koPager.templateDefaults, self.options.templates);
 		
         self.data = ko.observableArray(ko.utils.unwrapObservable(self.options.data || []));
 		self.processedData = ko.observableArray([]);
@@ -162,20 +174,21 @@ ko.components.register('ko-pager', {
 			}
 			return options;
 		});
-		if(self.options.endpoint){
+		var endpoint = self.options.endpoint;
+		if(endpoint && endpoint.url){
 			self.endpointCriteria = ko.pureComputed(function(){
 				var criteria = self.searchCriteria();
 				var options = {};
-				options[self.options.sortParameter] = criteria.sort;
-				options[self.options.sortDownParameter] = criteria.sortDown;
-				options[self.options.pageSizeParameter] = criteria.pageSize;
-				options[self.options.offsetParameter] = criteria.offset;
-				if(self.options.filtersInline){
+				options[endpoint.sortParameter] = criteria.sort;
+				options[endpoint.sortDownParameter] = criteria.sortDown;
+				options[endpoint.pageSizeParameter] = criteria.pageSize;
+				options[endpoint.offsetParameter] = criteria.offset;
+				if(endpoint.filtersInline){
 					for(var key in criteria.filters){
 						options[key] = criteria.filters[key];
 					}
 				}else{
-					options[self.options.filtersParameter] = criteria.filters;
+					options[endpoint.filtersParameter] = criteria.filters;
 				}
 				return options;
 			});
@@ -187,12 +200,13 @@ ko.components.register('ko-pager', {
 		if(self.options.refresh){
 			self.searchCriteria.subscribe(function(oldValue){
 				var criteria = self.searchCriteria();
-				if(self.options.endpoint && (self.options.requery || !self.firstQueryDone)){
+				var endpoint = self.options.endpoint;
+				if(endpoint && endpoint.url && (endpoint.requery || !endpoint.firstQueryDone)){
 					$.ajax({
-						url: self.options.endpoint,
-						method: self.options.method,
+						url: endpoint.url,
+						method: endpoint.method,
 						data: self.endpointCriteria(),
-						dataType: self.options.dataType
+						dataType: endpoint.dataType
 					}).done(function(data){
 						if(!self.firstQueryDone){
 							self.data(data);
@@ -217,13 +231,13 @@ ko.components.register('ko-pager', {
     },
     template: '<span data-bind="if: options.debug">' +
 		'<label>Debug Info:</label> <textarea data-bind="textInput: debugInfo" readonly class="form-control"></textarea>' +
-		'<div data-bind="template: options.sizeTemplate"></div>' +
+		'<div data-bind="template: options.templates.sizeTemplate"></div>' +
 		'<div class="row">' +
-		'<div data-bind="template: options.pageTemplate"></div>' +
-		'<div data-bind="template: options.buttonTemplate"></div>' +
+		'<div data-bind="template: options.templates.pageTemplate"></div>' +
+		'<div data-bind="template: options.templates.buttonTemplate"></div>' +
 		'</div>' +
 		'<div class="table-responsive">' +
-        '<table class="table table-striped">' +
+        '<table data-bind="attr: { class: options.classes.tableClass }">' +
         '<thead>' +
         '<tr data-bind="foreach: options.fields">' +
         '<th data-bind="template: { name: headerTemplate, data: { pager: $parent, field: $data } }, attr: { class: headerClass }">' +
@@ -239,8 +253,8 @@ ko.components.register('ko-pager', {
         '</table>' +
         '</div>' +
 		'<div class="row">' +
-		'<div data-bind="template: options.pageTemplate"></div>' +
-		'<div data-bind="template: options.buttonTemplate"></div>' +
+		'<div data-bind="template: options.templates.pageTemplate"></div>' +
+		'<div data-bind="template: options.templates.buttonTemplate"></div>' +
 		'</div>'
 });
 
@@ -248,7 +262,7 @@ $("body").append(
     '<script type="text/html" id="ko-pager-default-header-template">' +
 	'<span data-bind="click: function() { pager.setSort(field); }">' +
     '<span data-bind="if: field.sortable">' +
-	'<span data-bind="attr: { class: pager.sort() === field.field ? pager.sortDown() ? pager.options.sortDownIcon : pager.options.sortUpIcon : pager.options.sortNoneIcon }"></span>' +
+	'<span data-bind="attr: { class: pager.sort() === field.field ? pager.sortDown() ? pager.options.icons.sortDownIcon : pager.options.icons.sortUpIcon : pager.options.icons.sortNoneIcon }"></span>' +
 	'</span>' +
 	'<span data-bind="text: field.title"></span>' +
 	'</span>' +
@@ -270,27 +284,27 @@ $("body").append(
     '<script type="text/html" id="ko-pager-default-button-template">' +
 	'<div class="row">' +
 	'<div class="pull-right btn-group">' +
-	'<button data-bind="template: options.prevTemplate, enable: canPrev, click: prev, attr: { class: options.prevClass }"></button>' +
-	'<button data-bind="template: options.nextTemplate, enable: canNext, click: next, attr: { class: options.nextClass }"></button>' +
+	'<button data-bind="template: options.templates.prevTemplate, enable: canPrev, click: prev, attr: { class: options.classes.prevClass }"></button>' +
+	'<button data-bind="template: options.templates.nextTemplate, enable: canNext, click: next, attr: { class: options.classes.nextClass }"></button>' +
 	'</div>' +
 	'</div>'
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-size-template">' +
 	'<div class="row"><div class="pull-right form-inline">' +
-	'<label>Results per Page:</label> <select data-bind="options: options.increments, value: pageSize, attr: { class: options.pageSizeClass }" ></select>' +
+	'<label>Results per Page:</label> <select data-bind="options: options.increments, value: pageSize, attr: { class: options.classes.pageSizeClass }" ></select>' +
 	'</div></div>' +
     '</script>'
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-next-template">' +
 	'Next' +
-	'<span data-bind="attr: { class: options.nextIcon }"></span>' +
+	'<span data-bind="attr: { class: options.icons.nextIcon }"></span>' +
     '</script>'
 );
 $("body").append(
     '<script type="text/html" id="ko-pager-default-prev-template">' +
-	'<span data-bind="attr: { class: options.prevIcon }"></span>' +
+	'<span data-bind="attr: { class: options.icons.prevIcon }"></span>' +
 	'Previous' +
     '</script>'
 );
