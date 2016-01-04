@@ -87,10 +87,14 @@ ko.components.register('ko-pager', {
     viewModel: function (params) {
         var self = this;
 		
+		self.loading = ko.observable(true);
         self.options = $.extend({}, koPager.pagerDefaults, params);
         self.options.fields = (self.options.fields || []).map(function (item) {
             return $.extend({}, koPager.fieldDefaults, item);
         });
+		self.fieldCount = ko.pureComputed(function(){
+			return self.options.fields.length;
+		});
 		self.options.endpoint = $.extend({},koPager.endpointDefaults, self.options.endpoint);
 		self.options.icons = $.extend({},koPager.iconDefaults, self.options.icons);
 		self.options.classes = $.extend({},koPager.classDefaults, self.options.classes);
@@ -179,26 +183,40 @@ ko.components.register('ko-pager', {
 			self.endpointCriteria = ko.pureComputed(function(){
 				var criteria = self.searchCriteria();
 				var options = {};
-				options[endpoint.sortParameter] = criteria.sort;
-				options[endpoint.sortDownParameter] = criteria.sortDown;
-				options[endpoint.pageSizeParameter] = criteria.pageSize;
-				options[endpoint.offsetParameter] = criteria.offset;
-				if(endpoint.filtersInline){
-					for(var key in criteria.filters){
-						options[key] = criteria.filters[key];
-					}
-				}else{
-					options[endpoint.filtersParameter] = criteria.filters;
+				if(endpoint.sortIncluded){
+					options[endpoint.sortParameter] = criteria.sort;
 				}
-				return options;
+				if(endpoint.sortDownIncluded){
+					options[endpoint.sortDownParameter] = criteria.sortDown;
+				}
+				if(endpoint.pageSizeIncluded){
+					options[endpoint.pageSizeParameter] = criteria.pageSize;
+				}
+				if(endpoint.offsetIncluded){
+					options[endpoint.offsetParameter] = criteria.offset;
+				}
+				var filters = {};
+					for(var key in criteria.filters){
+						var value = criteria.filters[key];
+						if(value){
+							filters[key] = value;
+						}
+					}
+				if(endpoint.filtersInline){
+				}else{
+					options[endpoint.filtersParameter] = filters;
+				}
+				return $.extend({},filters,options);
 			});
 		}
 		self.processData = function(data, criteria){
 			data = self.options.refresh(data, criteria);
 			self.shownData(data);
+			self.loading(false);
 		};
 		if(self.options.refresh){
 			self.searchCriteria.subscribe(function(oldValue){
+				self.loading(true);
 				var criteria = self.searchCriteria();
 				var endpoint = self.options.endpoint;
 				if(endpoint && endpoint.url && (endpoint.requery || !endpoint.firstQueryDone)){
@@ -215,7 +233,7 @@ ko.components.register('ko-pager', {
 						self.firstQueryDone = true;
 					}).fail(function(data, dota, type){
 						console.error("Error: " + data.status + " - " + data.statusText);
-						data = self.options.refresh([], criteria);
+						self.processData([], criteria);
 					});
 				}else{
 					self.processData(self.data(), criteria);
@@ -244,11 +262,22 @@ ko.components.register('ko-pager', {
         '</th>' +
         '</tr>' +
         '</thead>' +
-        '<tbody data-bind="foreach: shownData">' +
+        '<tbody>' +		
+		'<tr data-bind="visible: loading">' +
+		'<td data-bind="attr: { colspan: fieldCount }">' +
+		'<div class="progress">' +
+		'<div class="progress-bar progress-bar-striped active" style="width: 100%">' +
+		'Loading...' +
+		'</div>' +
+		'</div>' +
+		'</td>' +
+		'</tr>' +
+		'<!-- ko foreach: shownData -->' +
         '<tr data-bind="foreach: $parent.options.fields">' +
         '<td data-bind="template: { name: contentTemplate, data: { pager: $parent, data: $parent, field: $data } }, attr: { class: contentClass, with: $parent }">' +
         '</td>' +
         '</tr>' +
+		'<!-- /ko -->' +
         '</tbody>' +
         '</table>' +
         '</div>' +

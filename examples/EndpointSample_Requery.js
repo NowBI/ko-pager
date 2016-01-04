@@ -24,6 +24,17 @@ var EndpointSampleSimpleViewModel = function () {
 	self.sampleFilters = {
 		id: ko.observable(1)
 	};
+	self.endpointParameters = {
+		url: 'http://jsonplaceholder.typicode.com/users',
+		filtersInline: true,
+		requery: true,
+		filtersInline: true,
+		sortIncluded: true,
+		sortDownIncluded: true,
+		pageSizeIncluded: true,
+		offsetIncluded: true,
+		filtersIncluded: true
+	};
 };
 
 ko.applyBindings(new EndpointSampleSimpleViewModel());
