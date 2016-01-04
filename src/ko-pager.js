@@ -52,7 +52,18 @@ koPager.pagerDefaults = koPager.pagerDefaults || {
 	nextIcon: 'glyphicon glyphicon-chevron-right',
 	nextTemplate: 'ko-pager-default-next-template',
 	prevIcon: 'glyphicon glyphicon-chevron-left',
-	prevTemplate: 'ko-pager-default-prev-template'
+	prevTemplate: 'ko-pager-default-prev-template',
+	sortParameter: 'sort',
+	sortIncluded: true,
+	sortDownParameter: 'sortDown',
+	sortDownIncluded: true,
+	pageSizeParameter: 'pageSize',
+	pageSizeIncluded: true,
+	offsetParameter: 'offset',
+	offsetIncluded: true,
+	filtersParameter: 'filters',
+	filtersIncluded: true,
+	filtersInline: false
 };
 koPager.fieldDefaults = koPager.fieldDefaults || {
     field: null,
@@ -86,6 +97,7 @@ ko.components.register('ko-pager', {
 		self.dataSize = ko.pureComputed(function(){
 			return self.data().length;
 		});
+		self.filters = ko.utils.unwrapObservable(self.options.filters || {});
 		
 		self.sort = ko.observable(self.options.defaultSort || self.options.fields[0].field);
 		self.sortDown = ko.observable(self.options.defaultSortDown);
@@ -137,8 +149,37 @@ ko.components.register('ko-pager', {
 			options.sortDown = ko.utils.unwrapObservable(self.sortDown);
 			options.pageSize = ko.utils.unwrapObservable(self.pageSize);
 			options.offset = ko.utils.unwrapObservable(self.offset);
+			options.filters = {};
+			for (var key in self.filters) {
+				var value = ko.utils.unwrapObservable(self.filters[key]) || null;
+				if (Array.isArray(value)) {
+					value = value.join(",");
+					if (value === "") {
+						value = null;
+					}
+				}
+				options.filters[key] = value;
+			}
 			return options;
 		});
+		if(self.options.endpoint){
+			self.endpointCriteria = ko.pureComputed(function(){
+				var criteria = self.searchCriteria();
+				var options = {};
+				options[self.options.sortParameter] = criteria.sort;
+				options[self.options.sortDownParameter] = criteria.sortDown;
+				options[self.options.pageSizeParameter] = criteria.pageSize;
+				options[self.options.offsetParameter] = criteria.offset;
+				if(self.options.filtersInline){
+					for(var key in criteria.filters){
+						options[key] = criteria.filters[key];
+					}
+				}else{
+					options[self.options.filtersParameter] = criteria.filters;
+				}
+				return options;
+			});
+		}
 		self.processData = function(data, criteria){
 			data = self.options.refresh(data, criteria);
 			self.shownData(data);
@@ -150,7 +191,7 @@ ko.components.register('ko-pager', {
 					$.ajax({
 						url: self.options.endpoint,
 						method: self.options.method,
-						data: criteria,
+						data: self.endpointCriteria(),
 						dataType: self.options.dataType
 					}).done(function(data){
 						if(!self.firstQueryDone){

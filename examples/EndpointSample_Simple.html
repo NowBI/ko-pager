@@ -1,26 +1,26 @@
 <html>
 	<head>
-		<title>KO-Pager - Endpoint Example</title>
+		<title>KO-Pager - Simple Endpoint Example</title>
 		<script src="../bower_components/jquery/dist/jquery.js" type="text/javascript"></script>
 		<script src="../bower_components/knockout/dist/knockout.debug.js" type="text/javascript"></script>
 		<script src="../bower_components/bootstrap/dist/js/bootstrap.js" type="text/javascript"></script>
 		<link href="../bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css" />		
 		<link href="../bower_components/bootstrap/dist/css/bootstrap-theme.css" rel="stylesheet" type="text/css" />	
 		<script src="../src/ko-pager.js" type="text/javascript" defer="defer"></script>
-		<script src="EndpointSample.js" type="text/javascript" defer="defer"></script>
+		<script src="EndpointSample_Simple.js" type="text/javascript" defer="defer"></script>
 	</head>
 	<body>
 		<div class="container">
             <div class="page-header">
-                <h1>Endpoint Example</h1>
+                <h1>Simple Endpoint Example</h1>
             </div>
-			<ko-pager params="debug: true, endpoint: 'http://jsonplaceholder.typicode.com/users', fields: sampleFields, defaultSort: 'lastName'"></ko-pager>
+			<ko-pager params="debug: true, endpoint: 'http://jsonplaceholder.typicode.com/users', fields: sampleFields"></ko-pager>
 		</div>
 	</body>
 	<script type="text/html" id="email-content-template">
 		<a data-bind="attr: { href: 'mailto:' + data[field.field] }, text: data[field.field]"></a>
 	</script>
 	<script type="text/html" id="website-content-template">
-		<a data-bind="attr: { href: data[field.field] }, text: data[field.field]"></a>
+		<a data-bind="attr: { href: 'http://' + data[field.field] }, text: data[field.field]"></a>
 	</script>
 </html>

@@ -1,6 +1,6 @@
 ﻿"use strict"
 
-var EndpointSampleViewModel = function () {
+var EndpointSampleSimpleViewModel = function () {
     var self = this;
     self.sampleFields = [
     {
@@ -23,4 +23,4 @@ var EndpointSampleViewModel = function () {
     }];
 };
 
-ko.applyBindings(new EndpointSampleViewModel());
+ko.applyBindings(new EndpointSampleSimpleViewModel());
