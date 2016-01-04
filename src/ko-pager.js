@@ -69,7 +69,7 @@ koPager.endpointDefaults = koPager.endpointDefaults || {
 	url: null,
     method: "GET",
 	dataType: "JSON",
-	requery: false,
+	serverSideProcessing: false,
 	sortParameter: 'sort',
 	sortIncluded: true,
 	sortDownParameter: 'sortDown',
@@ -95,6 +95,7 @@ ko.components.register('ko-pager', {
 		self.fieldCount = ko.pureComputed(function(){
 			return self.options.fields.length;
 		});
+		self.firstQueryDone = ko.observable(false);
 		self.options.endpoint = $.extend({},koPager.endpointDefaults, self.options.endpoint);
 		self.options.icons = $.extend({},koPager.iconDefaults, self.options.icons);
 		self.options.classes = $.extend({},koPager.classDefaults, self.options.classes);
@@ -112,6 +113,12 @@ ko.components.register('ko-pager', {
 		});
 		self.dataSize = ko.pureComputed(function(){
 			return self.data().length;
+		});
+		self.showPageArea = ko.pureComputed(function(){
+			return self.options.endpoint.url ? self.firstQueryDone() : true;
+		});
+		self.showMaximum = ko.pureComputed(function(){
+			return !self.options.endpoint.url;
 		});
 		self.filters = ko.utils.unwrapObservable(self.options.filters || {});
 		
@@ -141,22 +148,23 @@ ko.components.register('ko-pager', {
 		};
 		self.movePages = function(value){
 			var offset = self.offset() + (self.pageSize() * value);
-			offset = Math.min(self.dataSize() - 1, offset);
+			offset = self.options.endpoint.serverSideProcessing ? offset : Math.min(self.dataSize() - 1, offset);
 			offset = Math.max(0,offset);
 			self.offset(offset);
 		};
 		self.minIndex = ko.pureComputed(function(){
-			return self.dataSize() ? (self.offset() + 1) : 0;
+			return self.dataSize() != null ? (self.offset() + 1) : 0;
 		});
 		self.maxIndex = ko.pureComputed(function(){
-			return Math.min(self.dataSize(), self.offset() + self.pageSize());
+			var lastIndex = self.offset() + self.pageSize();
+			return self.dataSize() != null ? Math.min(self.dataSize(), lastIndex) : lastIndex;
 		});
 		
 		self.canPrev = ko.pureComputed(function(){
 			return self.minIndex() > 1;
 		});
 		self.canNext = ko.pureComputed(function(){
-			return self.maxIndex() < self.dataSize();
+			return self.options.endpoint.serverSideProcessing || self.maxIndex() < self.dataSize();
 		});
 		
 		self.searchCriteria = ko.computed(function(){
@@ -179,20 +187,20 @@ ko.components.register('ko-pager', {
 			return options;
 		});
 		var endpoint = self.options.endpoint;
-		if(endpoint && endpoint.url){
+		if(endpoint.url){
 			self.endpointCriteria = ko.pureComputed(function(){
 				var criteria = self.searchCriteria();
 				var options = {};
-				if(endpoint.sortIncluded){
+				if(endpoint.sortIncluded && criteria.sort){
 					options[endpoint.sortParameter] = criteria.sort;
 				}
-				if(endpoint.sortDownIncluded){
+				if(endpoint.sortDownIncluded && criteria.sortDown){
 					options[endpoint.sortDownParameter] = criteria.sortDown;
 				}
-				if(endpoint.pageSizeIncluded){
+				if(endpoint.pageSizeIncluded && criteria.pageSize){
 					options[endpoint.pageSizeParameter] = criteria.pageSize;
 				}
-				if(endpoint.offsetIncluded){
+				if(endpoint.offsetIncluded && criteria.offset){
 					options[endpoint.offsetParameter] = criteria.offset;
 				}
 				var filters = {};
@@ -210,37 +218,35 @@ ko.components.register('ko-pager', {
 			});
 		}
 		self.processData = function(data, criteria){
-			data = self.options.refresh(data, criteria);
+			if(!self.options.endpoint.serverSideProcessing){
+				data = self.options.refresh(data, criteria);
+			}
 			self.shownData(data);
 			self.loading(false);
 		};
-		if(self.options.refresh){
-			self.searchCriteria.subscribe(function(oldValue){
-				self.loading(true);
-				var criteria = self.searchCriteria();
-				var endpoint = self.options.endpoint;
-				if(endpoint && endpoint.url && (endpoint.requery || !endpoint.firstQueryDone)){
-					$.ajax({
-						url: endpoint.url,
-						method: endpoint.method,
-						data: self.endpointCriteria(),
-						dataType: endpoint.dataType
-					}).done(function(data){
-						if(!self.firstQueryDone){
-							self.data(data);
-						}
-						self.processData(data, criteria);
-						self.firstQueryDone = true;
-					}).fail(function(data, dota, type){
-						console.error("Error: " + data.status + " - " + data.statusText);
-						self.processData([], criteria);
-					});
-				}else{
-					self.processData(self.data(), criteria);
-				}
-			});
-			self.searchCriteria.notifySubscribers();
-		}
+		self.searchCriteria.subscribe(function(oldValue){
+			self.loading(true);
+			var criteria = self.searchCriteria();
+			var endpoint = self.options.endpoint;
+			if(endpoint.url && (endpoint.serverSideProcessing || !self.firstQueryDone())){
+				$.ajax({
+					url: endpoint.url,
+					method: endpoint.method,
+					data: self.endpointCriteria(),
+					dataType: endpoint.dataType
+				}).done(function(data){
+					self.data(data);
+					self.processData(data, criteria);
+					self.firstQueryDone(true);
+				}).fail(function(data){
+					console.error("Error: " + data.status + " - " + data.statusText);
+					self.processData([], criteria);
+				});
+			}else{
+				self.processData(self.data(), criteria);
+			}
+		});
+		self.searchCriteria.notifySubscribers();
 		if(self.options.debug){
 			self.debugInfo = ko.pureComputed(function(){
 				return JSON.stringify(self.searchCriteria(),null,"\t");
@@ -305,7 +311,7 @@ $("body").append(
 $("body").append(
     '<script type="text/html" id="ko-pager-default-page-template">' +
 	'<div class="pull-left">' +
-	'<label>Showing <span data-bind="text: minIndex"></span> - <span data-bind="text: maxIndex"></span> of <span data-bind="text: dataSize"></span>' +
+	'<label data-bind="visible: showPageArea">Showing <span data-bind="text: minIndex"></span> - <span data-bind="text: maxIndex"></span> <span data-bind="visible: showMaximum">of <span data-bind="text: dataSize"></span></span>' +
     '</div>' +
     '</script>'
 );

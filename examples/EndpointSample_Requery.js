@@ -26,14 +26,13 @@ var EndpointSampleSimpleViewModel = function () {
 	};
 	self.endpointParameters = {
 		url: 'http://jsonplaceholder.typicode.com/users',
+		serverSideProcessing: true,
+		filtersIncluded: true,
 		filtersInline: true,
-		requery: true,
-		filtersInline: true,
-		sortIncluded: true,
-		sortDownIncluded: true,
-		pageSizeIncluded: true,
-		offsetIncluded: true,
-		filtersIncluded: true
+		sortIncluded: false,
+		sortDownIncluded: false,
+		pageSizeParameter: '_limit',
+		offsetParameter: '_start'
 	};
 };
 
