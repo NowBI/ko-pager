@@ -40,7 +40,7 @@
         table.page = ko.pureComputed({
             read: table.internal.page,
             write: function (value) {
-                table.internal.page(Number(value));
+                table.internal.page(Math.max(1, Math.min(table.pageCount(), Number(value))));
             }
         });
 
@@ -48,10 +48,10 @@
         table.pageSize = ko.pureComputed({
             read: table.internal.pageSize,
             write: function (value) {
-                var newValue = Number(value);
-                var currentIndex = table.pageStartIndex();
-                table.internal.pageSize(newValue);
-                table.page(Math.ceil((currentIndex + 1) / newValue));
+                table.internal.pageSize(Number(value));
+                if (table.page() > table.pageCount()) {
+                    table.page(table.pageCount());
+                }
             }
         });
 
@@ -64,43 +64,41 @@
         });
 
         table.pageEndIndex = ko.pureComputed(function () {
-            return table.pageStartIndex() + table.pageSize();
+            return Math.max(0, Math.min(table().length, table.pageStartIndex() + table.pageSize()) - 1);
         });
 
         table.pagedItems = ko.pureComputed(function () {
-            return table.slice(table.pageStartIndex(), table.pageEndIndex());
+            return table.slice(table.pageStartIndex(), table.pageEndIndex() + 1);
+        });
+
+        table.hasPreviousPage = ko.pureComputed(function () {
+            return table.page() > 1;
         });
 
         table.hasNextPage = ko.pureComputed(function () {
-            return table.pageEndIndex() <= table().length;
+            return table.page() < table.pageCount();
         });
-
-        table.nextPage = function () {
-            if (table.hasNextPage()) {
-                table.page(table.page() + 1);
-            }
-        };
-
-        table.hasPreviousPage = ko.pureComputed(function () {
-            return table.pageStartIndex() > 0;
-        });
-
-        table.previousPage = function () {
-            if (table.hasPreviousPage()) {
-                table.page(table.page() - 1);
-            }
-        };
 
         table.firstPage = function () {
-            if (table.hasPreviousPage()) {
-                table.page(1);
-            }
+            table.page(1);
+        };
+
+        table.previousPage = function () {
+            table.page(table.page() - 1);
+        };
+
+        table.nextPage = function () {
+            table.page(table.page() + 1);
         };
 
         table.lastPage = function () {
-            if (table.hasNextPage()) {
-                table.page(table.pageCount());
-            }
+            table.page(table.pageCount());
         }
+
+        table.subscribe(function (value) {
+            if (table.pageStartIndex() >= value.length) {
+                table.previousPage();
+            }
+        });
     };
 }));

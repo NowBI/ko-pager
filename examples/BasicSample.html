@@ -17,8 +17,8 @@
                 <li>Page Count: <span data-bind="text: sampleData.pageCount" /></li>
                 <li>Page Start Index: <span data-bind="text: sampleData.pageStartIndex" /></li>
                 <li>Page End Index: <span data-bind="text: sampleData.pageEndIndex" /></li>
-                <li>On First Page: <span data-bind="text: sampleData.onFirstPage" /></li>
                 <li>Has Previous Page: <span data-bind="text: sampleData.hasPreviousPage" /></li>
+                <li>Has Next Page: <span data-bind="text: sampleData.hasNextPage" /></li>
             </ul>
         </div>
         <div>
@@ -38,6 +38,7 @@
                         <th>Age</th>
                         <th>Gender</th>
                         <th>Company</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: sampleData.pagedItems">
@@ -48,6 +49,7 @@
                         <td data-bind="text: age" />
                         <td data-bind="text: gender" />
                         <td data-bind="text: company" />
+                        <td><button data-bind="click: $parent.remove">X</button></td>
                     </tr>
                 </tbody>
             </table>
