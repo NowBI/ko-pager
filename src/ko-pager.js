@@ -34,11 +34,29 @@
             throw new Error("Page size must be greater than zero.");
         }
 
-        table.pageSize = ko.observable(params && params.pageSize || exports.defaults.pageSize || defaultPageSize);
-        table.page = ko.observable(1);
+        table.internal = table.internal || {};
+
+        table.internal.page = ko.observable(1);
+        table.page = ko.pureComputed({
+            read: table.internal.page,
+            write: function (value) {
+                table.internal.page(Number(value));
+            }
+        });
+
+        table.internal.pageSize = ko.observable(params && params.pageSize || exports.defaults.pageSize || defaultPageSize);
+        table.pageSize = ko.pureComputed({
+            read: table.internal.pageSize,
+            write: function (value) {
+                var newValue = Number(value);
+                var currentIndex = table.pageStartIndex();
+                table.internal.pageSize(newValue);
+                table.page(Math.ceil((currentIndex + 1) / newValue));
+            }
+        });
 
         table.pageCount = ko.pureComputed(function () {
-            return Math.floor(table().length / table.pageSize()) + 1;
+            return Math.ceil(table().length / table.pageSize());
         });
 
         table.pageStartIndex = ko.pureComputed(function () {
@@ -73,21 +91,16 @@
             }
         };
 
-        table.onFirstPage = function () {
-            return table.page() === 1;
-        };
-
         table.firstPage = function () {
-            table.page(1);
-        };
-
-        table.onLastPage = function () {
-            return table.page() === table.pageCount();
+            if (table.hasPreviousPage()) {
+                table.page(1);
+            }
         };
 
         table.lastPage = function () {
-            table.page(table.pageCount());
+            if (table.hasNextPage()) {
+                table.page(table.pageCount());
+            }
         }
     };
-
 }));

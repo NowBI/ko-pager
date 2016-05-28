@@ -17,15 +17,16 @@
                 <li>Page Count: <span data-bind="text: sampleData.pageCount" /></li>
                 <li>Page Start Index: <span data-bind="text: sampleData.pageStartIndex" /></li>
                 <li>Page End Index: <span data-bind="text: sampleData.pageEndIndex" /></li>
-                <li>Has Next Page: <span data-bind="text: sampleData.hasNextPage" /></li>
+                <li>On First Page: <span data-bind="text: sampleData.onFirstPage" /></li>
                 <li>Has Previous Page: <span data-bind="text: sampleData.hasPreviousPage" /></li>
             </ul>
         </div>
         <div>
-            <button data-bind="click: sampleData.firstPage, disable: sampleData.onFirstPage">First Page</button>
+            <button data-bind="click: sampleData.firstPage, enable: sampleData.hasPreviousPage">First Page</button>
             <button data-bind="click: sampleData.previousPage, enable: sampleData.hasPreviousPage">Previous Page</button>
             <button data-bind="click: sampleData.nextPage, enable: sampleData.hasNextPage">Next Page</button>
-            <button data-bind="click: sampleData.lastPage, disable: sampleData.onLastPage">Last Page</button>
+            <button data-bind="click: sampleData.lastPage, enable: sampleData.hasNextPage">Last Page</button>
+            <input type="number" data-bind="value: sampleData.pageSize" min="1" max="100" step="1" />
         </div>
         <div>
             <table>
