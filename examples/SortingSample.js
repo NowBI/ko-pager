@@ -1,9 +1,9 @@
 ﻿"use strict"
 
-var PagingSampleViewModel = function () {
+var SortingSampleViewModel = function () {
     var self = this;
     self.sampleData = ko.observableArray(nbi.sampleData);
-    self.sampleData.extend({ paging: {} });
+    self.sampleData.extend({ sorting: {} });
 
     self.currentId = ko.observable(self.sampleData().length);
 
@@ -25,4 +25,4 @@ var PagingSampleViewModel = function () {
     };
 };
 
-ko.applyBindings(new PagingSampleViewModel());
+ko.applyBindings(new SortingSampleViewModel());

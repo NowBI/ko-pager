@@ -15,12 +15,12 @@
 }(function (ko, exports) {
     "use strict";
 
-    var defaultPageSize = 25;
-
     exports = {
-        defaults: {
-            pageSize: defaultPageSize
-        }
+        defaults: {}
+    };
+
+    exports.defaults.paging = {
+        pageSize: 25
     };
 
     ko.extenders.paging = function (table, params) {
@@ -44,7 +44,7 @@
             }
         });
 
-        table.internal.pageSize = ko.observable(params && params.pageSize || exports.defaults.pageSize || defaultPageSize);
+        table.internal.pageSize = ko.observable(params && params.pageSize || exports.defaults.paging.pageSize);
         table.pageSize = ko.pureComputed({
             read: table.internal.pageSize,
             write: function (value) {
@@ -103,4 +103,106 @@
 
         return table;
     };
+
+    exports.defaults.sorting = {
+        field: undefined,
+        reverse: false,
+        throttle: 50,
+        classUp: undefined,
+        textUp: "^",
+        classDown: undefined,
+        textDown: "v",
+        classNeutral: undefined,
+        textNeutral: "-"
+    };
+
+    ko.extenders.sorting = function (table, params) {
+        if (!(table && typeof table.sort === "function")) {
+            throw new Error("There was no sortable table provided!");
+        }
+        table.sortField = ko.observable(params && params.field || exports.defaults.sorting.field);
+        table.sortReverse = ko.observable(params && params.reverse || exports.defaults.sorting.reverse);
+        table.sortThrottle = ko.observable(params && params.throttle || exports.defaults.sorting.throttle)
+
+        table.sortedItems = ko.computed(function () {
+            var field = table.sortField();
+            var reverse = table.sortReverse();
+            return ko.unwrap(table).sort(function (left, right) {
+                if (field) {
+                    var leftField = ko.unwrap(left[field]);
+                    var rightField = ko.unwrap(right[field]);
+                    if (leftField || rightField) {
+                        left = leftField;
+                        right = rightField;
+                    }
+                }
+                return (left == right ? 0 : (left < right ? -1 : 1)) * (reverse ? -1 : 1);
+            });
+        }).extend({ throttle: table.sortThrottle });
+        return table;
+    };
+
+    ko.components.register('sorting-header', {
+        viewModel: function (params) {
+            if (!(params && params.table && typeof !ko.isComputed(params.table.sortedItems))) {
+                throw new Error("There was no sortable table provided!");
+            }
+            var self = this;
+
+            self.table = params.table;
+            self.field = ko.observable(params.field);
+            self.template = ko.observable(params.template);
+            self.classUp = ko.observable(params.classUp || exports.defaults.sorting.classUp);
+            self.textUp = ko.observable(params.textUp || exports.defaults.sorting.textUp);
+            self.classDown = ko.observable(params.classDown || exports.defaults.sorting.classDown);
+            self.textDown = ko.observable(params.textDown || exports.defaults.sorting.textDown);
+            self.classNeutral = ko.observable(params.classNeutral || exports.defaults.sorting.classNeutral);
+            self.textNeutral = ko.observable(params.textNeutral || exports.defaults.sorting.textNeutral);
+
+            self.arrowClass = ko.pureComputed(function () {
+                var field = self.table.sortField();
+                if (field == self.field()) {
+                    var reverse = self.table.sortReverse();
+                    if (reverse) {
+                        return self.classUp();
+                    } else {
+                        return self.classDown();
+                    }
+                } else {
+                    return self.classNeutral();
+                }
+            });
+
+            self.arrowText = ko.pureComputed(function () {
+                var field = self.table.sortField();
+                if (field == self.field()) {
+                    var reverse = self.table.sortReverse();
+                    if (reverse) {
+                        return self.textUp();
+                    } else {
+                        return self.textDown();
+                    }
+                } else {
+                    return self.textNeutral();
+                }
+            });
+
+            self.clicked = function () {
+                var field = self.table.sortField();
+                var myField = self.field();
+                if (field == myField) {
+                    self.table.sortReverse(!self.table.sortReverse());
+                } else {
+                    self.table.sortReverse(false);
+                    self.table.sortField(myField);
+                }
+            };
+
+            return self;
+        },
+        template: "<div class=\"sorting-header\" data-bind=\"click: clicked\">" +
+            "<span data-bind=\"css: arrowClass, text: arrowText\"></span>" +
+            "<span data-bind=\"template: { nodes: $componentTemplateNodes }\"></span>" +
+            "</div>"
+    });
 }));

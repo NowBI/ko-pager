@@ -1,0 +1,67 @@
+<html>
+<head>
+    <title>KO-Pager - Sorting Example</title>
+    <script src="../bower_components/knockout/dist/knockout.debug.js" type="text/javascript"></script>
+    <script src="../src/ko-pager.js" type="text/javascript" defer="defer"></script>
+    <script src="SampleData.js" type="text/javascript" defer="defer"></script>
+    <script src="SortingSample.js" type="text/javascript" defer="defer"></script>
+</head>
+<body>
+    <h1>Sorting Example</h1>
+    <div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'id'">
+                                ID
+                            </sorting-header>
+                        </th>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'firstName'">
+                                First Name
+                            </sorting-header>
+                        </th>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'lastName'">
+                                Last Name
+                            </sorting-header>
+                        </th>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'age'">
+                                Age
+                            </sorting-header>
+                        </th>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'gender'">
+                                Gender
+                            </sorting-header>
+                        </th>
+                        <th>
+                            <sorting-header params="table: sampleData, field: 'company'">
+                                Company
+                            </sorting-header>
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: sampleData.sortedItems">
+                    <tr>
+                        <td data-bind="text: id" />
+                        <td data-bind="text: firstName" />
+                        <td data-bind="text: lastName" />
+                        <td data-bind="text: age" />
+                        <td data-bind="text: gender" />
+                        <td data-bind="text: company" />
+                        <td><button data-bind="click: $parent.remove">X</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <button data-bind="click: add">+</button>
+        </div>
+    </div>
+</body>
+</html>
