@@ -1,6 +1,7 @@
 {
   "name": "KOpager",
   "authors": [
+	"Now Business Intelligence, Inc.",
     "Bobby Cafazzo <bcafazzo@nbi.company>"
   ],
   "description": "Knockout-based paginated table component.",
@@ -14,7 +15,11 @@
     "pagination",
     "page",
     "table",
-    "tables"
+    "tables",
+	"filter",
+	"filtering",
+	"searching",
+	"search"
   ],
   "license": "MIT",
   "homepage": "https://github.com/NowBI/ko-pager",
@@ -26,8 +31,6 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "~2.1.4",
-    "knockout": "~3.4.0",
-    "bootstrap": "~3.3.6"
+    "knockout": "^3.2.0"
   }
 }
