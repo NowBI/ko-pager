@@ -5,7 +5,7 @@
   License: MIT
 */
 (function (factory) {
-    if (typeof require === "function" && typeof exports === "object" && typeof module === "object") {
+    if (typeof require === "function" && typeof exports === "object") {
         factory(require("knockout"), exports);
     } else if (typeof define === "function" && define["amd"]) {
         define(["knockout", "exports"], factory);
