@@ -10,7 +10,7 @@
     } else if (typeof define === "function" && define["amd"]) {
         define(["knockout", "exports"], factory);
     } else {
-        factory(ko, ko.pagination = {});
+        factory(ko, ko.pager = {});
     }
 }(function (ko, exports) {
     "use strict";
@@ -23,7 +23,7 @@
         }
     };
 
-    ko.extenders.pagination = function (table, params) {
+    ko.extenders.paging = function (table, params) {
         if (!ko.isObservable(table)) {
             throw new Error("Provided pagination target is not an observable!");
         }
@@ -100,5 +100,7 @@
                 table.previousPage();
             }
         });
+
+        return table;
     };
 }));
