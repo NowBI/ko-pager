@@ -68,7 +68,11 @@
         });
 
         table.pagedItems = ko.pureComputed(function () {
-            return table.slice(table.pageStartIndex(), table.pageEndIndex() + 1);
+            var localTable = table;
+            if (ko.isObservable(localTable.sortedItems)) {
+                localTable = localTable.sortedItems();
+            }
+            return localTable.slice(table.pageStartIndex(), table.pageEndIndex() + 1);
         });
 
         table.hasPreviousPage = ko.pureComputed(function () {
